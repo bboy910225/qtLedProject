@@ -53,6 +53,15 @@
 #include <QSerialPort>
 #include <QTime>
 #include <QDebug>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QStringList>
+#include <QSqlError>
+#include <QElapsedTimer>
+#include <QEventLoop>
+#include <QTimer>
+#include <QFile>
+#include <QMessageBox>
 
 MasterThread::MasterThread(QObject *parent) :
     QThread(parent)
@@ -73,18 +82,90 @@ MasterThread::~MasterThread()
 //! [1] //! [2]
 void MasterThread::transaction(const QString &portName, int waitTimeout, const QString &request)
 {
+    QString fileName = "C:/Users/HorseKing/Downloads/leddisp/Log.txt";
+    QString str;
+    QFile file(fileName);
+         if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+         {
+            qDebug()<<"can't open";
+
+         }
+        QTextStream in(&file);
+        str=in.readLine();//讀取一行
+        qDebug()<< "readText" + str;
+        //To get support interface
+        qDebug() << "Available drivers:";
+        QStringList drivers = QSqlDatabase::drivers();
+        foreach(QString driver, drivers)
+        qDebug() << "\t" << driver;
+
+        QSqlDatabase _db = QSqlDatabase::addDatabase("QODBC","dbTemp");
+        qDebug() << "ODBC driver valid?" << _db.isValid();
+
+//      Start to connect SQL Server
+    //set QODBC and Name
+    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", "SQLServer");
+    //connect localhost
+    db.setHostName("127.0.0.1");
+    QString dsn = QString::fromLocal8Bit("DRIVER={SQL SERVER};SERVER=127.0.0.1;DATABASE=master;uid=HorseKing;pwd=Bboy910225");
+    db.setPort(1433);
+//  QString dsn = QString::fromLocal8Bit("DRIVER={SQL SERVER};SERVER=127.0.0.1;DATABASE=master");
+    //Use already seted dsn
+//    QString dsn = QString::fromLocal8Bit("SQLServer");
+    db.setDatabaseName(dsn);
+    //setUserName and password
+//    db.setUserName("HorseKing");
+//    db.setPassword("Bboy910225");
+    QString arryWord[5];
+    int strLength =0;
+    if(!db.open()) {
+      qDebug() <<(db.lastError().databaseText());
+
+    }else{
+        qDebug()<<"database open success!";
+        QSqlQuery query(db);
+        bool success = query.exec("select DS002  from MMDB.dbo.SFTMDS");
+        if(!success){
+            qDebug() <<"failed to connect database";
+        }
+        while(query.next())
+        {
+            QStringList str = query.value(0).toString().split(";");
+//            int length = query.value(0).toString().length();
+//            int index = 0;
+            for(int i=0;i<str.length();i++){
+                qDebug()<<"number :"<<str[i];
+            }
+//                arryWord[index] = str;
+//            length -= str.length()+1;
+//            qDebug() << length;
+//            index +=1;
+//            strLength =index;
+//            qDebug()<<query.value(0).toString() <<query.value(1).toString() <<query.value(2).toString();
+        }
+    }
+
 //! [1]
+    for(int i =0;i< strLength;i++)
+    {
+
+        qDebug() << arryWord[i];
+//        if(arryWord[i]=="") continue;
     const QMutexLocker locker(&m_mutex);
     m_portName = portName;
     m_waitTimeout = waitTimeout;
-    m_request = request;
+    m_request = arryWord[i];
 //! [3]
     if (!isRunning()){
         qDebug() <<"run";
+        m_quit = false;
         start();
     }
     else
         m_cond.wakeOne();
+    while (!m_quit) {}
+        qDebug() <<"Timer over";
+}
 }
 //! [2] //! [3]
 
@@ -129,7 +210,7 @@ void MasterThread::run()
 
             if (!serial.open(QIODevice::ReadWrite)) {
                 emit error(tr("Can't open %1, error code %2")
-                           .arg(m_portName).arg(serial.error()));
+                           .arg(m_portName).arg(serial.errorString()));
                 return;
             }
         }
@@ -226,8 +307,8 @@ void MasterThread::run()
          Rsize++;
 
          // calculate check code and push in result
-        char check;
-        for(int i=1;i<sizeof(result)-1;i++){
+        char check='\x00';
+        for(int i=1;i<sizeof(result)-2;i++){
             check +=result[i];
         }
 
@@ -238,7 +319,7 @@ void MasterThread::run()
 
         qDebug() <<requestData;
         QByteArray data = QByteArray::fromRawData(result, sizeof(result));
-
+qDebug() <<data;
         //write
         serial.write(data);
 
@@ -276,5 +357,15 @@ void MasterThread::run()
         currentRequest = m_request;
         m_mutex.unlock();
     }
+    m_quit =false;
+
 //! [13]
 }
+
+ void MasterThread::Delay_MSec(unsigned int msec)
+{
+    QEventLoop loop;//defined a loop event
+    QTimer::singleShot(msec, &loop, SLOT(quit()));//create a timer
+    loop.exec();//event will stop here until time over
+}
+

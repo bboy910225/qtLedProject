@@ -66,7 +66,7 @@ public:
     ~MasterThread();
 
     void transaction(const QString &portName, int waitTimeout, const QString &request);
-
+    void Delay_MSec(unsigned int msec);
 signals:
     void response(const QString &s);
     void error(const QString &s);
@@ -80,7 +80,7 @@ private:
     int m_waitTimeout = 0;
     QMutex m_mutex;
     QWaitCondition m_cond;
-    bool m_quit = false;
+    bool m_quit = true;
 };
 //! [0]
 
