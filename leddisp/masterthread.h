@@ -55,6 +55,10 @@
 #include <QThread>
 #include <QWaitCondition>
 #include <QSerialPortInfo>
+#include <QTimer>
+#include <QSerialPort>
+
+
 
 //! [0]
 class MasterThread : public QThread
@@ -66,11 +70,18 @@ public:
     ~MasterThread();
 
     void transaction(const QString &portName, int waitTimeout, const QString &request);
+
     void Delay_MSec(unsigned int msec);
+    QList<QString> ReadDatabase();
+    void Update(QSerialPort &serial, QVector<QVector<char>> total );
+    void Thread_stop();
+    bool loop = true;
+
 signals:
     void response(const QString &s);
     void error(const QString &s);
     void timeout(const QString &s);
+    void stoped(bool stop);
 
 private:
     void run() override;
@@ -81,6 +92,8 @@ private:
     QMutex m_mutex;
     QWaitCondition m_cond;
     bool m_quit = true;
+    QTimer *timer;
+
 };
 //! [0]
 

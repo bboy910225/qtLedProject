@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "QTimer"
+#include <QSerialPort>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -19,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&m_thread, &MasterThread::response, this, &MainWindow::showResponse);
     connect(&m_thread, &MasterThread::error, this, &MainWindow::processError);
     connect(&m_thread, &MasterThread::timeout, this, &MainWindow::processTimeout);
+    connect(&m_thread, &MasterThread::stoped, this, &MainWindow::setControlsEnabled);
+    connect(ui->m_stopbutton, SIGNAL(clicked()), this, SLOT(on_m_stopButton_clicked()));
 }
 
 MainWindow::~MainWindow()
@@ -54,6 +58,7 @@ void MainWindow::processTimeout(const QString &s)
 void MainWindow::setControlsEnabled(bool enable)
 {
     ui->m_runButton->setEnabled(enable);
+    ui->m_stopbutton->setEnabled(enable);
     ui->m_serialPortComboBox->setEnabled(enable);
     ui->m_waitResponseSpinBox->setEnabled(enable);
     ui->m_requestLineEdit->setEnabled(enable);
@@ -67,4 +72,9 @@ void MainWindow::on_m_runButton_clicked()
     m_thread.transaction(ui->m_serialPortComboBox->currentText(),
                          ui->m_waitResponseSpinBox->value(),
                          ui->m_requestLineEdit->text());
+}
+void MainWindow::on_m_stopButton_clicked()
+{
+    setControlsEnabled(false);
+    m_thread.loop = false;
 }

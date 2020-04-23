@@ -61,9 +61,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>190</y>
-      <width>451</width>
-      <height>141</height>
+      <y>160</y>
+      <width>121</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="text">
@@ -74,7 +74,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>120</y>
+      <y>100</y>
       <width>221</width>
       <height>51</height>
      </rect>
@@ -120,6 +120,19 @@
     </property>
     <property name="text">
      <string>Time</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="m_stopbutton">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>30</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>stop</string>
     </property>
    </widget>
   </widget>

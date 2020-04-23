@@ -23,6 +23,7 @@ private slots:
     void processTimeout(const QString &s);
 
     void on_m_runButton_clicked();
+    void on_m_stopButton_clicked();
 
 private:
     void setControlsEnabled(bool enable);
